@@ -13,7 +13,8 @@ void httpErrorHandle(
       onSuccess();
       break;
     case 500:
-      displaySnackBar(context: context, content: "Something went wrong");
+      displaySnackBar(
+          context: context, content: jsonDecode(res.body)['message']);
     default:
       displaySnackBar(
           context: context, content: jsonDecode(res.body)['message']);
