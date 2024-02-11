@@ -1,6 +1,9 @@
-import 'package:airbnb_clone/services/login_service.dart';
+import 'package:airbnb_clone/screens/signup_screen.dart';
+import 'package:airbnb_clone/widgets/showSnackBar.dart';
 import 'package:flutter/material.dart';
-import 'package:line_icons/line_icons.dart';
+
+import '../widgets/customtextbutton.dart';
+import '../widgets/customtextfield.dart';
 
 class LoginScreen extends StatefulWidget {
   static const routeName = '/login';
@@ -11,85 +14,87 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  void signUpUser() async {
-    AuthService().signUpUser(context);
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+
       body: SafeArea(
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Row(
-                    children: [
-                      Container(
-                          height: 30,
-                          width: 30,
-                          child: Image.asset(
-                            'assets/paper.png',
-                            fit: BoxFit.contain,
-                          )),
-                      const SizedBox(
-                        width: 5,
-                      ),
-                      GestureDetector(
-                        onTap: signUpUser,
-                        child: Text(
-                          'airbnb',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 20),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(child: SizedBox()),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: TextButton(
-                    style: TextButton.styleFrom(
-                      backgroundColor: Colors.grey[300],
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'Login',
+                style: TextStyle(fontSize: 30, fontWeight: FontWeight.w500),
+              ),
+              buildLoginPage(context),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('Don\'t have an account? '),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.pushNamed(context, SignUpScreen.routeName);
+                    },
+                    child: Text(
+                      'Sign Up',
+                      style: TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    onPressed: () {},
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Image.asset(
-                            'assets/drawer.png',
-                            height: 20,
-                          ),
-                        ),
-                        Container(
-                            margin: EdgeInsets.all(5),
-                            padding: EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(20),
-                              ),
-                            ),
-                            child: Icon(
-                              Icons.person_outline_outlined,
-                              color: Colors.grey,
-                            ))
-                      ],
-                    ),
-                  ),
-                )
-              ],
-            ),
-            Text('Login Page'),
-          ],
+                  )
+                ],
+              )
+            ],
+          ),
         ),
       ),
     );
   }
 }
+
+Widget buildLoginPage(BuildContext context) {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final _signUpKey = GlobalKey<FormState>();
+  void signUpUser() async {
+    print('succcess');
+    // AuthService().signUpUser(context);
+  }
+
+  return Form(
+    key: _signUpKey,
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6),
+      child: Column(
+        children: [
+          CustomTextFormField(
+            hintText: 'Enter your Email',
+            controller: _emailController,
+          ),
+          CustomTextFormField(
+            hintText: 'Enter your Password',
+            controller: _passwordController,
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: CustomTextButton(
+              callback: () {
+                if (_signUpKey.currentState!.validate()) {
+                  if (_passwordController.text.length < 6) {
+                    displaySnackBar(
+                        context: context,
+                        content: 'Paswword can\'t be less than 6 characters!!');
+                  } else {
+                    signUpUser();
+                  }
+                }
+              },
+              buttonTitle: 'Login',
+            ),
+          )
+        ],
+      ),
+    ),
+  );
+}
+
+
