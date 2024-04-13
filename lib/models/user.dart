@@ -31,7 +31,24 @@ class ModelUser {
         token: map['token'] ?? '',
         username: map['username'] ?? '',
         email: map['email'] ?? '',
-        password: map['password']?? '',
+        password: map['password'] ?? '',
         address: map['address'] ?? '');
   }
+
+  // ModelUser copyWith(
+  //     {String? id,
+  //     String? token,
+  //     String? username,
+  //     String? email,
+  //     String? password,
+  //     String? address}) {
+  //   return ModelUser(
+  //     id: id ?? this.id,
+  //     token: token ?? this.token,
+  //     username: username ?? this.username,
+  //     email: email ?? this.email,
+  //     password: password ?? this.password,
+  //     address: address ?? this.address,
+  //   );
+  // }
 }

@@ -1,18 +1,31 @@
 import 'package:flutter/material.dart';
+
 class CustomTextFormField extends StatelessWidget {
   final TextEditingController controller;
+  final TextInputType textInputType;
+  final VoidCallback callback;
+  final TextInputAction textInputAction;
   const CustomTextFormField(
-      {super.key, required this.hintText, required this.controller});
+      {super.key,
+      required this.callback,
+      required this.hintText,
+      this.textInputAction = TextInputAction.next,
+      required this.controller,
+      this.textInputType = TextInputType.text});
 
   final String hintText;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: TextFormField(
+        onFieldSubmitted: (text) {
+          callback();
+        },
+        keyboardType: textInputType,
         controller: controller,
-        textInputAction: TextInputAction.next,
+        textInputAction: textInputAction,
         validator: (val) {
           if (val == null || val.isEmpty) {
             return 'Enter your ${hintText}';
@@ -20,31 +33,19 @@ class CustomTextFormField extends StatelessWidget {
           return null;
         },
         decoration: InputDecoration(
-          filled: true,
-          fillColor: Colors.white,
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(30)),
+          focusedBorder: UnderlineInputBorder(
+            borderSide: BorderSide(color: Colors.black87),
+          ),
+          disabledBorder: UnderlineInputBorder(
             borderSide: BorderSide(width: 1, color: Colors.black87),
           ),
-          disabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(30)),
+          enabledBorder: UnderlineInputBorder(
+            borderSide: BorderSide(color: Colors.grey),
+          ),
+          errorBorder: UnderlineInputBorder(
             borderSide: BorderSide(width: 1, color: Colors.black87),
           ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(30)),
-            borderSide: BorderSide(width: 1, color: Colors.grey),
-          ),
-          border: OutlineInputBorder(
-              borderRadius: BorderRadius.all(Radius.circular(4)),
-              borderSide: BorderSide(
-                width: 1,
-              )),
-          errorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(30)),
-            borderSide: BorderSide(width: 1, color: Colors.black87),
-          ),
-          focusedErrorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(30)),
+          focusedErrorBorder: UnderlineInputBorder(
             borderSide: BorderSide(width: 1, color: Colors.black87),
           ),
           hintText: hintText,

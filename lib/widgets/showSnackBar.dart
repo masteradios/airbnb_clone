@@ -20,10 +20,11 @@ openDrawer({required BuildContext context}) {
       child: Drawer(
     child: Column(
       children: [
-        Text('hi'),
-        Text('hi'),
-        Text('hi'),
-        Text('hi'),
+        GestureDetector(
+            onTap: () {},
+            child: Row(
+              children: [Icon(Icons.calendar_month), Text('My Bookings')],
+            ))
       ],
     ),
   ));
