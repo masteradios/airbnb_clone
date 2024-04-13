@@ -3,7 +3,6 @@ import 'package:airbnb_clone/services/auth_service.dart';
 import 'package:airbnb_clone/widgets/showSnackBar.dart';
 import 'package:flutter/material.dart';
 
-import '../constants.dart';
 import '../widgets/customtextbutton.dart';
 import '../widgets/customtextfield.dart';
 
@@ -20,38 +19,51 @@ class _SignUpScreenState extends State<SignUpScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SingleChildScrollView(
-        child: SafeArea(
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Image.asset(
-                  logo,
-                  height: 300,
-                  width: 200,
+        child: Container(
+          height: MediaQuery.of(context).size.height,
+          decoration: BoxDecoration(
+              image: DecorationImage(
+                  image: AssetImage('assets/signupimage.png'),
+                  fit: BoxFit.fill,
+                  opacity: 0.7)),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Image.asset(
+                  'assets/logow.png',
+                  height: 200,
                 ),
-                BuildSignUpPage(),
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 25.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text('Already have an account? '),
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.pushReplacementNamed(
-                              context, LoginScreen.routeName);
-                        },
-                        child: Text(
-                          'Login',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      )
-                    ],
-                  ),
+              ),
+              BuildSignUpPage(),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 25.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Already have an account? ',
+                      style: TextStyle(color: Colors.white, fontSize: 20),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.pushReplacementNamed(
+                            context, LoginScreen.routeName);
+                      },
+                      child: Text(
+                        'Login',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            fontSize: 20),
+                      ),
+                    )
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
