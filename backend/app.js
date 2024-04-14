@@ -5,7 +5,7 @@ const port = 3000;
 const HttpError = require('./httpError');
 const userView=require('./views/userview');
 var cors = require('cors');
-
+require('dotenv').config();
 
 app.use(express.json());
 app.use("/users",userView);
@@ -31,7 +31,9 @@ app.use(function (req, res, next) {
 
 
 
-
+  
+  
+  
 
 app.listen(port, () => {
     console.log(`Listening on ${port}`);

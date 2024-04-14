@@ -84,7 +84,7 @@ class buildPlaceTile extends StatelessWidget {
             height: 300,
             decoration: BoxDecoration(
               image: DecorationImage(
-                  image: AssetImage('assets/signupimage.png'),
+                  image: NetworkImage('assets/signupimage.png'),
                   fit: BoxFit.fill),
               borderRadius: BorderRadius.circular(15),
             ),
