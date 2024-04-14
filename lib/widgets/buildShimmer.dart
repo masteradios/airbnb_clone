@@ -41,12 +41,16 @@ class ShimmerWidget extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.only(top: 8.0),
-                color: Colors.grey,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  color: Colors.grey,
+                ),
               ),
               Container(
                 height: 200,
                 margin: EdgeInsets.symmetric(vertical: 10, horizontal: 2),
                 decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
                   color: Colors.grey, // Shimmer color
                 ),
                 width: double.infinity,

@@ -42,6 +42,6 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     ModelUser user = Provider.of<UserProvider>(context).user;
-    return (user.token.isEmpty) ? HomeScreen() : SignUpScreen();
+    return (user.token.isNotEmpty) ? HomeScreen() : SignUpScreen();
   }
 }

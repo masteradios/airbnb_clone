@@ -5,11 +5,12 @@ const port = 3000;
 const HttpError = require('./httpError');
 const userView=require('./views/userview');
 var cors = require('cors');
+const placeView = require('./views/placeview');
 require('dotenv').config();
 
 app.use(express.json());
 app.use("/users",userView);
-
+app.use("/places",placeView);
 
 //showing error if request is sent to route that doesnt exist
 

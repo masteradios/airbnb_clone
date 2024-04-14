@@ -3,8 +3,8 @@ class ModelPlace {
   final String hotelName;
   final num price;
   final int numberOfReviews;
-  final String lat;
-  final String long;
+  final double lat;
+  final double long;
   final String imageUrl;
 
   ModelPlace({
