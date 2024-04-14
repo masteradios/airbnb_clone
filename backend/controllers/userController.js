@@ -28,7 +28,7 @@ async function signUpUser(req, res, next) {
         });
         await newuser.save();
         res.json({
-            "message": "User created successfully",
+            "message": "Account created successfully",
             "user":newuser
         });
 

@@ -1,6 +1,13 @@
-import 'package:airbnb_clone/constants.dart';
+import 'package:airbnb_clone/utils.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:lottie/lottie.dart';
+
+import '../models/places.dart';
+import '../services/place_services/getTenPlaces.dart';
+import 'chatScreen.dart';
+import 'exploreScreen.dart';
 
 class HomeScreen extends StatefulWidget {
   HomeScreen({super.key});
@@ -11,9 +18,56 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  List<ModelPlace> modelPlaces = [];
+  Position? position;
+  bool _isLoading = false;
+  Future<void> fetchImageDetails() async {
+    setState(() {
+      _isLoading = true;
+    });
+    modelPlaces = await PlaceServices().getTopTenPlaces(context: context);
+    position = await determinePosition();
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    fetchImageDetails();
+  }
+
   int currentIndex = 0;
   @override
   Widget build(BuildContext context) {
+    List pages = [
+      (_isLoading)
+          ? Center(
+              child: Container(
+                  width: MediaQuery.of(context).size.width,
+                  child: Lottie.asset('assets/animations/loading.json')),
+            )
+          : (modelPlaces.isEmpty)
+              ? Center(
+                  child: Text('No Places'),
+                )
+              : ExploreScreen(
+                  modelPlaces: modelPlaces,
+                  position: position!,
+                ),
+      Center(
+        child: Text('Wishlists'),
+      ),
+      Center(
+        child: Text('Trips'),
+      ),
+      ChatScreen(),
+      Center(
+        child: Text('Home'),
+      ),
+    ];
     return Scaffold(
       appBar: buildAppBar(),
       bottomNavigationBar: CupertinoTabBar(

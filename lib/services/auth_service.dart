@@ -8,7 +8,6 @@ import 'package:airbnb_clone/widgets/showSnackBar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../screens/home_screen.dart';
 
@@ -38,11 +37,10 @@ class AuthService {
           onSuccess: () async {
             displaySnackBar(
                 content: jsonDecode(res.body)['message'], context: context);
-            //print(jsonDecode(res.body)['user']);
             Provider.of<UserProvider>(context, listen: false)
                 .updateUserDetails(jsonDecode(res.body)['user']);
-            final prefs = await SharedPreferences.getInstance();
-            await prefs.setString('auth-token', jsonDecode(res.body)['token']);
+            // final prefs = await SharedPreferences.getInstance();
+            // await prefs.setString('auth-token', jsonDecode(res.body)['token']);
 
             Navigator.pushReplacementNamed(context, HomeScreen.routeName);
           });

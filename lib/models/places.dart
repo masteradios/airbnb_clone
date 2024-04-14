@@ -3,12 +3,14 @@ class ModelPlace {
   final String hotelName;
   final num price;
   final int numberOfReviews;
-  final String lat;
-  final String long;
+  final double lat;
+  final double long;
+  final String owner;
   final String imageUrl;
 
   ModelPlace({
     required this.id,
+    required this.owner,
     required this.hotelName,
     required this.price,
     required this.numberOfReviews,
@@ -25,12 +27,14 @@ class ModelPlace {
       'number_of_reviews': numberOfReviews,
       'lat': lat,
       'long': long,
+      'owner': owner,
       'image_url': imageUrl,
     };
   }
 
   factory ModelPlace.fromMap(Map<String, dynamic> map) {
     return ModelPlace(
+      owner: map['owner'] ?? '',
       id: map['_id'] ?? '',
       hotelName: map['hotelName'] ?? '',
       price: map['price'] ?? 0,
