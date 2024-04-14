@@ -27,7 +27,6 @@ class ShimmerWidget extends StatelessWidget {
     return Container(
       height: 300,
       width: MediaQuery.of(context).size.width,
-      margin: EdgeInsets.all(20),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
         color: Colors.deepPurple,

@@ -1,17 +1,12 @@
+import 'package:airbnb_clone/models/places.dart';
 import 'package:airbnb_clone/screens/searchScreen.dart';
+import 'package:airbnb_clone/widgets/buildShimmer.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/user.dart';
 import '../providers/user_provider.dart';
-import '../widgets/buildShimmer.dart';
-
-class ImageDetails {
-  final String name;
-  final String imageUrl;
-
-  ImageDetails({required this.name, required this.imageUrl});
-}
+import '../utils.dart';
 
 class ExploreScreen extends StatefulWidget {
   ExploreScreen({
@@ -23,16 +18,58 @@ class ExploreScreen extends StatefulWidget {
 }
 
 class _ExploreScreenState extends State<ExploreScreen> {
-  Future<ImageDetails> fetchImageDetails() async {
+  List<ModelPlace> modelPlaces = [];
+  Future<void> fetchImageDetails() async {
     // Simulate fetching image details from an API
     // Replace this with your actual API call
     // For simplicity, using a delayed Future
-    await Future.delayed(Duration(seconds: 1));
 
-    return ImageDetails(
-      name: "Example Image",
-      imageUrl: "assets/signupimage.png",
-    );
+    await Future.delayed(Duration(seconds: 1));
+    modelPlaces = [
+      ModelPlace(
+          id: '12',
+          hotelName: 'Aditya',
+          price: 200,
+          numberOfReviews: 1232,
+          lat: '34.0522',
+          long: '-118.2437',
+          imageUrl:
+              'https://delhitourism.gov.in/dttdc/img/new/lotustemple.jpg'),
+      ModelPlace(
+          id: '12',
+          hotelName: 'Kushwaha',
+          price: 200,
+          numberOfReviews: 1232,
+          lat: '34.0522',
+          long: '-118.2437',
+          imageUrl:
+              'https://delhitourism.gov.in/dttdc/img/new/lotustemple.jpg'),
+      ModelPlace(
+          id: '12',
+          hotelName: 'Aditya',
+          price: 200,
+          numberOfReviews: 1232,
+          lat: '34.0522',
+          long: '-118.2437',
+          imageUrl:
+              'https://delhitourism.gov.in/dttdc/img/new/lotustemple.jpg'),
+      ModelPlace(
+          id: '12',
+          hotelName: 'Kushwaha',
+          price: 200,
+          numberOfReviews: 1232,
+          lat: '34.0522',
+          long: '-118.2437',
+          imageUrl: 'https://delhitourism.gov.in/dttdc/img/new/lotustemple.jpg')
+    ];
+    setState(() {});
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    fetchImageDetails();
   }
 
   double value = 0;
@@ -40,38 +77,38 @@ class _ExploreScreenState extends State<ExploreScreen> {
   @override
   Widget build(BuildContext context) {
     ModelUser user = Provider.of<UserProvider>(context).user;
-    return Column(
-      children: [
-        buildSearchTile(),
-        Expanded(
-          child: ListView.builder(
-            itemBuilder: (context, index) {
-              return FutureBuilder(
-                  future: fetchImageDetails(),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      // Show shimmer effect while waiting for image details
-                      return BuildShimmer();
-                    } else if (snapshot.hasError) {
-                      return Text('Error: ${snapshot.error}');
-                    } else {
-                      // Show image once image details are fetched
-                      return buildPlaceTile();
-                    }
-                  });
-            },
-            itemCount: 4,
-          ),
-        )
-      ],
-    );
+    return (modelPlaces.isEmpty)
+        ? Center(
+            child: CircularProgressIndicator(
+              color: Colors.redAccent,
+            ),
+          )
+        : Column(
+            children: [
+              buildSearchTile(),
+              Expanded(
+                child: ListView.builder(
+                  itemBuilder: (context, index) {
+                    return buildPlaceTile(
+                      snapshot: modelPlaces[index],
+                    );
+                  },
+                  itemCount: modelPlaces.length,
+                ),
+              )
+            ],
+          );
   }
 }
 
 class buildPlaceTile extends StatelessWidget {
-  const buildPlaceTile({
-    super.key,
-  });
+  final ModelPlace snapshot;
+  const buildPlaceTile({super.key, required this.snapshot});
+  String calculateTotalDistance(
+      {required LatLng pointA, required LatLng pointB}) {
+    double distance = calculateDistance(pointA, pointB);
+    return distance.toStringAsFixed(0);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -80,25 +117,37 @@ class buildPlaceTile extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
+          Image.network(
+            snapshot.imageUrl,
             height: 300,
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                  image: NetworkImage('assets/signupimage.png'),
-                  fit: BoxFit.fill),
-              borderRadius: BorderRadius.circular(15),
-            ),
-            child: Align(
-              alignment: Alignment.topRight,
-              child: IconButton(
-                onPressed: () {},
-                icon: Icon(
-                  Icons.favorite_border,
-                  size: 30,
-                  color: Colors.black,
-                ),
-              ),
-            ),
+            fit: BoxFit.fill,
+            loadingBuilder: (BuildContext context, Widget child,
+                ImageChunkEvent? loadingProgress) {
+              if (loadingProgress == null) {
+                // Image has finished loading, return the actual image
+                return Stack(
+                  children: [
+                    ClipRRect(
+                        borderRadius: BorderRadius.circular(20), child: child),
+                    Positioned(
+                      top: 10,
+                      right: 10,
+                      child: IconButton(
+                        onPressed: () {},
+                        icon: Icon(
+                          Icons.favorite_border,
+                          size: 30,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              } else {
+                // Image is still loading, show the shimmer effect
+                return BuildShimmer();
+              }
+            },
           ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -107,7 +156,7 @@ class buildPlaceTile extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Place',
+                    snapshot.hotelName,
                     style: TextStyle(fontSize: 18),
                   ),
                   Row(
@@ -129,7 +178,7 @@ class buildPlaceTile extends StatelessWidget {
                 ],
               ),
               Text(
-                '1242 km away',
+                '${calculateTotalDistance(pointA: LatLng(40.7128, -74.0060), pointB: LatLng(double.parse(snapshot.lat), double.parse(snapshot.long)))} km away',
                 style: TextStyle(color: Colors.grey, fontSize: 15),
               )
             ],
