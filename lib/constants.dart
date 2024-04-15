@@ -18,3 +18,7 @@ const List<String> worldMapsName = [
   'Middle East',
   'Italy'
 ];
+
+const rules = '''
+By clicking this button, I hereby acknowledge and agree to adhere to all terms, conditions, and regulations outlined by the owner.
+''';

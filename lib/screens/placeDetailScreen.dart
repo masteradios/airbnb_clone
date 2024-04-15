@@ -2,32 +2,15 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:airbnb_clone/models/places.dart';
+import 'package:airbnb_clone/screens/orderScreen.dart';
 import 'package:bounce/bounce.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:mailer/mailer.dart';
-import 'package:mailer/smtp_server/gmail.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
-
-import '../utils.dart';
-
-class GoogleAuthApi {
-  final _googleSignIn = GoogleSignIn(scopes: ['https://mail.google.com/']);
-  Future<GoogleSignInAccount?> signIn() async {
-    try {
-      {
-        return await _googleSignIn.signIn();
-      }
-    } catch (err) {
-      print('google error' + err.toString());
-    }
-  }
-}
 
 class PlaceDetailsScreen extends StatefulWidget {
   final ModelPlace place;
@@ -38,27 +21,6 @@ class PlaceDetailsScreen extends StatefulWidget {
 }
 
 class _PlaceDetailsScreenState extends State<PlaceDetailsScreen> {
-  void _sendEmail({required String text}) async {
-    final GoogleSignInAccount? user = await GoogleAuthApi().signIn();
-    final email = user!.email;
-    final auth = await user.authentication;
-    final token = auth.accessToken;
-    final smtpServer = gmailSaslXoauth2(email, token!);
-    final message = Message()
-      ..from = Address(email, 'Aditya')
-      ..recipients = ['reachadikush@gmail.com']
-      ..subject = 'Product Orders'
-      ..text = text;
-    try {
-      await send(message, smtpServer);
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Reservations Confirmed!!')));
-    } on MailerException catch (err) {
-      print('mail error$err');
-    }
-    Navigator.pop(context);
-  }
-
   bool _isLoading = false;
   Future<void> saveAndShare(Uint8List? bytes) async {
     final directory = await getApplicationDocumentsDirectory();
@@ -66,7 +28,8 @@ class _PlaceDetailsScreenState extends State<PlaceDetailsScreen> {
     image.writeAsBytesSync(bytes!);
     await Share.shareFiles(
       [image.path],
-      text: widget.place.hotelName,
+      text:
+          'Check this hotel out on airBnB clone !!\n' + widget.place.hotelName,
       subject: 'Hotel',
     );
   }
@@ -176,9 +139,10 @@ class _PlaceDetailsScreenState extends State<PlaceDetailsScreen> {
                 ),
                 Bounce(
                   onTap: () {
-                    String text = prepareEmailBody(widget.place.hotelName,
-                        '19th to 24th May', widget.place.price);
-                    _sendEmail(text: text);
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (context) {
+                      return ConfirmOrderScreen(place: widget.place);
+                    }));
                   },
                   child: Container(
                     padding: EdgeInsets.all(10),

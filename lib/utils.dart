@@ -70,7 +70,8 @@ Future<Position> determinePosition() async {
   return await Geolocator.getCurrentPosition();
 }
 
-String prepareEmailBody(String name, String duration, num price) {
+String prepareEmailBody(
+    String name, String duration, num totalAmount, String upiId) {
   String emailBody = '''
   Hello,
 
@@ -78,9 +79,9 @@ String prepareEmailBody(String name, String duration, num price) {
   
   Name: $name
   Duration: $duration
+  UPI ID :$upiId
+  Price: ₹$totalAmount
   
-  Price: ₹$price
-
   Thank you.
   ''';
 
