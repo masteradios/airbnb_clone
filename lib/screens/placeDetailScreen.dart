@@ -2,7 +2,6 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:airbnb_clone/models/places.dart';
-import 'package:airbnb_clone/utils.dart';
 import 'package:bounce/bounce.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -14,6 +13,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+import '../utils.dart';
 
 class GoogleAuthApi {
   final _googleSignIn = GoogleSignIn(scopes: ['https://mail.google.com/']);
@@ -104,90 +105,96 @@ class _PlaceDetailsScreenState extends State<PlaceDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
+      body: Column(
         children: [
-          BuildBody(screenshotController: screenshotController, widget: widget),
-          Positioned(
-            top: 30,
-            left: 10,
-            right: 20,
+          Expanded(
+            child: Stack(
+              children: [
+                BuildBody(
+                    screenshotController: screenshotController, widget: widget),
+                Positioned(
+                  top: 30,
+                  left: 10,
+                  right: 20,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      BuildAppBarButton(
+                          callback: () {
+                            Navigator.of(context).pop();
+                          },
+                          icon: Icons.arrow_back),
+                      Row(
+                        children: [
+                          BuildAppBarButton(
+                              callback: () {}, icon: Icons.favorite_border),
+                          const SizedBox(
+                            width: 15,
+                          ),
+                          BuildAppBarButton(
+                              callback: () async {
+                                redirectToURL(
+                                    context: context,
+                                    lat: widget.place.lat.toString(),
+                                    long: widget.place.long.toString());
+                              },
+                              icon: Iconsax.map),
+                          const SizedBox(
+                            width: 15,
+                          ),
+                          BuildAppBarButton(
+                              callback: () async {
+                                final image =
+                                    await screenshotController.capture();
+                                saveAndShare(image);
+                              },
+                              icon: Icons.share)
+                        ],
+                      )
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            color: Colors.white,
+            padding: EdgeInsets.symmetric(horizontal: 15, vertical: 25),
+            width: MediaQuery.of(context).size.width,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                BuildAppBarButton(
-                    callback: () {
-                      Navigator.of(context).pop();
-                    },
-                    icon: Icons.arrow_back),
-                Row(
-                  children: [
-                    BuildAppBarButton(
-                        callback: () {}, icon: Icons.favorite_border),
-                    const SizedBox(
-                      width: 15,
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10.0),
+                  child: Text(
+                    ' ₹${widget.place.price} night',
+                    style: GoogleFonts.getFont('Poppins',
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18),
+                  ),
+                ),
+                Bounce(
+                  onTap: () {
+                    String text = prepareEmailBody(widget.place.hotelName,
+                        '19th to 24th May', widget.place.price);
+                    _sendEmail(text: text);
+                  },
+                  child: Container(
+                    padding: EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                        color: Colors.redAccent,
+                        borderRadius: BorderRadius.circular(8)),
+                    child: Text(
+                      'Reserve',
+                      style: GoogleFonts.getFont('Poppins',
+                          color: Colors.white, fontWeight: FontWeight.bold),
                     ),
-                    BuildAppBarButton(
-                        callback: () async {
-                          redirectToURL(
-                              context: context,
-                              lat: widget.place.lat.toString(),
-                              long: widget.place.long.toString());
-                        },
-                        icon: Iconsax.map),
-                    const SizedBox(
-                      width: 15,
-                    ),
-                    BuildAppBarButton(
-                        callback: () async {
-                          final image = await screenshotController.capture();
-                          saveAndShare(image);
-                        },
-                        icon: Icons.share)
-                  ],
+                  ),
                 )
               ],
             ),
           ),
-          Positioned(
-              bottom: 0,
-              child: Container(
-                color: Colors.white,
-                padding: EdgeInsets.symmetric(horizontal: 15, vertical: 25),
-                width: MediaQuery.of(context).size.width,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 10.0),
-                      child: Text(
-                        ' ₹${widget.place.price} night',
-                        style: GoogleFonts.getFont('Poppins',
-                            color: Colors.black,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18),
-                      ),
-                    ),
-                    Bounce(
-                      onTap: () {
-                        String text = prepareEmailBody(widget.place.hotelName,
-                            '19th to 24th May', widget.place.price);
-                        _sendEmail(text: text);
-                      },
-                      child: Container(
-                        padding: EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                            color: Colors.redAccent,
-                            borderRadius: BorderRadius.circular(8)),
-                        child: Text(
-                          'Reserve',
-                          style: GoogleFonts.getFont('Poppins',
-                              color: Colors.white, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    )
-                  ],
-                ),
-              ))
         ],
       ),
     );
@@ -244,57 +251,76 @@ class BuildBody extends StatelessWidget {
             ),
           ),
         ),
-        Container(
-          margin: const EdgeInsets.all(8.0),
-          child: Text(
-            widget.place.hotelName,
-            style: GoogleFonts.getFont('Poppins',
-                fontWeight: FontWeight.bold, fontSize: 20),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: const Divider(
-            color: Colors.grey,
-            thickness: 0.9,
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        Expanded(
+          child: ListView(
             children: [
-              CircleAvatar(
-                backgroundColor: Colors.redAccent,
-                radius: 20,
-                child: Icon(
-                  Icons.person,
-                  size: 30,
-                  color: Colors.white,
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Text(
+                  widget.place.hotelName,
+                  style: GoogleFonts.getFont('Poppins',
+                      fontWeight: FontWeight.bold, fontSize: 20),
                 ),
               ),
-              const SizedBox(
-                width: 10,
+              const Divider(
+                color: Colors.grey,
+                thickness: 0.9,
               ),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Hosted by ${widget.place.owner}',
-                    style: GoogleFonts.getFont('Poppins',
-                        fontWeight: FontWeight.bold, fontSize: 15),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    CircleAvatar(
+                      backgroundColor: Colors.redAccent,
+                      radius: 20,
+                      child: Icon(
+                        Icons.person,
+                        size: 30,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(
+                      width: 10,
+                    ),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Hosted by ${widget.place.owner}',
+                          style: GoogleFonts.getFont('Poppins',
+                              fontWeight: FontWeight.bold, fontSize: 15),
+                        ),
+                        Text(
+                          '3 years hosting',
+                          style: GoogleFonts.getFont('Poppins',
+                              color: Colors.grey, fontSize: 12),
+                        ),
+                      ],
+                    )
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: const Divider(
+                  color: Colors.grey,
+                  thickness: 0.9,
+                ),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    widget.place.description,
+                    style: GoogleFonts.getFont('Poppins', fontSize: 15),
                   ),
-                  Text(
-                    '3 years hosting',
-                    style: GoogleFonts.getFont('Poppins',
-                        color: Colors.grey, fontSize: 12),
-                  ),
-                ],
+                ),
               )
             ],
           ),
-        )
+        ),
       ],
     );
   }

@@ -79,7 +79,7 @@ String prepareEmailBody(String name, String duration, num price) {
   Name: $name
   Duration: $duration
   
-  Price: '₹$price'
+  Price: ₹$price
 
   Thank you.
   ''';

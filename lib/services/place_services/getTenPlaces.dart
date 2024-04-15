@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:airbnb_clone/httpErrorHandle.dart';
 import 'package:airbnb_clone/models/places.dart';
-import 'package:airbnb_clone/widgets/showSnackBar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 
@@ -28,7 +27,8 @@ class PlaceServices {
             }
           });
     } catch (err) {
-      displaySnackBar(content: err.toString(), context: context);
+      print(err.toString());
+      //displaySnackBar(content: 'Network Error', context: context);
     }
     return modelPlaces;
   }

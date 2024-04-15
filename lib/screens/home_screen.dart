@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:airbnb_clone/utils.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -21,7 +23,8 @@ class _HomeScreenState extends State<HomeScreen> {
   List<ModelPlace> modelPlaces = [];
   Position? position;
   bool _isLoading = false;
-  Future<void> fetchImageDetails() async {
+  Timer? timer;
+  Future<void> fetchPlaceDetails() async {
     setState(() {
       _isLoading = true;
     });
@@ -36,7 +39,26 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    fetchImageDetails();
+    fetchPlaceDetails();
+    startTimer();
+  }
+
+  void startTimer() {
+    const duration = Duration(seconds: 4);
+    timer = Timer.periodic(duration, (timer) {
+      if (!_isLoading) {
+        if (modelPlaces.isEmpty) {
+          fetchPlaceDetails();
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+    timer?.cancel();
   }
 
   int currentIndex = 0;
@@ -51,7 +73,9 @@ class _HomeScreenState extends State<HomeScreen> {
             )
           : (modelPlaces.isEmpty)
               ? Center(
-                  child: Text('No Places'),
+                  child: Container(
+                      width: MediaQuery.of(context).size.width,
+                      child: Lottie.asset('assets/animations/loading.json')),
                 )
               : ExploreScreen(
                   modelPlaces: modelPlaces,
