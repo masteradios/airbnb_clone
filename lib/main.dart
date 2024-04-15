@@ -1,4 +1,5 @@
 import 'package:airbnb_clone/models/user.dart';
+import 'package:airbnb_clone/providers/date_provider.dart';
 import 'package:airbnb_clone/providers/user_provider.dart';
 import 'package:airbnb_clone/routes.dart';
 import 'package:airbnb_clone/screens/home_screen.dart';
@@ -16,7 +17,10 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-      providers: [ChangeNotifierProvider(create: (_) => UserProvider())],
+      providers: [
+        ChangeNotifierProvider(create: (_) => UserProvider()),
+        ChangeNotifierProvider(create: (_) => DateProvider())
+      ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Flutter Demo',

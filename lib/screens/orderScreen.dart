@@ -4,11 +4,21 @@ import 'package:bounce/bounce.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:intl/intl.dart';
 import 'package:mailer/mailer.dart';
 import 'package:mailer/smtp_server/gmail.dart';
+import 'package:provider/provider.dart';
+import 'package:table_calendar/table_calendar.dart';
 
 import '../constants.dart';
+import '../providers/date_provider.dart';
 import '../utils.dart';
+
+CalendarFormat _calendarFormat = CalendarFormat.month;
+RangeSelectionMode _rangeSelectionMode = RangeSelectionMode.toggledOn;
+DateTime _focusedDay = DateTime.now();
+
+DateTime kFirstDay = DateTime.now();
 
 class GoogleAuthApi {
   final _googleSignIn = GoogleSignIn(scopes: ['https://mail.google.com/']);
@@ -33,19 +43,8 @@ class ConfirmOrderScreen extends StatefulWidget {
 }
 
 class _ConfirmOrderScreenState extends State<ConfirmOrderScreen> {
-  int sum = 0;
   int tax = 1000;
-  int numberOfDays = 5;
-  int totalAmount = 0;
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    setState(() {
-      sum = widget.place.price.toInt() * numberOfDays;
-      totalAmount = sum + tax;
-    });
-  }
+  //String s = DateFormat('dd MMMM yyyy').format(_rangeStart!);
 
   final _paymentKey = GlobalKey<FormState>();
   void _sendEmail({required String text}) async {
@@ -81,6 +80,11 @@ class _ConfirmOrderScreenState extends State<ConfirmOrderScreen> {
 
   @override
   Widget build(BuildContext context) {
+    DateTime? startDate = Provider.of<DateProvider>(context).rangeStart;
+    DateTime? endDate = Provider.of<DateProvider>(context).rangeEnd;
+    int numberOfDays = Provider.of<DateProvider>(context).differenceInDays;
+    int sum = widget.place.price.toInt() * numberOfDays;
+    int totalAmount = sum + tax;
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -99,7 +103,15 @@ class _ConfirmOrderScreenState extends State<ConfirmOrderScreen> {
             ),
             Padding(
               padding: const EdgeInsets.all(12.0),
-              child: BuildTripDetails(place: widget.place),
+              child: BuildTripDetails(
+                place: widget.place,
+                startDate: (startDate == null || endDate == null)
+                    ? '-'
+                    : DateFormat('dd MMMM yyyy').format(startDate!),
+                endDate: (startDate == null || endDate == null)
+                    ? '-'
+                    : DateFormat('dd MMMM yyyy').format(endDate!),
+              ),
             ),
             Divider(
               thickness: 6,
@@ -135,10 +147,15 @@ class _ConfirmOrderScreenState extends State<ConfirmOrderScreen> {
             ),
             Bounce(
               onTap: () {
-                String text = prepareEmailBody(widget.place.hotelName,
-                    '21-26 April', totalAmount, _upiController.text.trim());
+                String text = prepareEmailBody(
+                    widget.place.hotelName,
+                    '${DateFormat('dd MMMM yyyy').format(startDate!)}- ${DateFormat('dd MMMM yyyy').format(endDate!)}',
+                    totalAmount,
+                    _upiController.text.trim());
                 if (_paymentKey.currentState!.validate()) {
                   _sendEmail(text: text);
+                  Provider.of<DateProvider>(context, listen: false)
+                      .updateRange(null, null);
                 }
                 //_sendEmail(text: text);
               },
@@ -234,9 +251,147 @@ class BuildPlace extends StatelessWidget {
   }
 }
 
+class CalendarPage extends StatefulWidget {
+  const CalendarPage({super.key});
+
+  @override
+  State<CalendarPage> createState() => _CalendarPageState();
+}
+
+class _CalendarPageState extends State<CalendarPage> {
+  DateTime? _rangeStart;
+  DateTime? _rangeEnd;
+  DateTime? _selectedDay;
+
+  @override
+  Widget build(BuildContext context) {
+    DateTime kLastDay =
+        DateTime(kFirstDay.year, kFirstDay.month + 3, kFirstDay.day);
+
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.only(top: 20.0),
+        child: ClipRRect(
+          borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(20), topRight: Radius.circular(20)),
+          child: Scaffold(
+            body: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                children: [
+                  Align(
+                    alignment: Alignment.topLeft,
+                    child: IconButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        icon: Icon(
+                          Icons.close,
+                          color: Colors.black,
+                        )),
+                  ),
+                  Expanded(
+                    child: TableCalendar(
+                      calendarStyle: CalendarStyle(
+                          rangeHighlightColor: Colors.grey.shade300,
+                          isTodayHighlighted: false,
+                          todayDecoration: BoxDecoration(
+                              color: Colors.black, shape: BoxShape.circle),
+                          rangeEndDecoration: BoxDecoration(
+                              color: Colors.black, shape: BoxShape.circle),
+                          rangeStartDecoration: BoxDecoration(
+                              color: Colors.black, shape: BoxShape.circle),
+                          markerDecoration: BoxDecoration(color: Colors.black)),
+                      headerStyle: HeaderStyle(formatButtonVisible: false),
+                      firstDay: kFirstDay,
+                      lastDay: kLastDay,
+                      focusedDay: _focusedDay,
+                      selectedDayPredicate: (day) =>
+                          isSameDay(_selectedDay, day),
+                      rangeStartDay: _rangeStart,
+                      rangeEndDay: _rangeEnd,
+                      calendarFormat: _calendarFormat,
+                      rangeSelectionMode: _rangeSelectionMode,
+                      onDaySelected: (selectedDay, focusedDay) {
+                        if (!isSameDay(_selectedDay, selectedDay)) {
+                          setState(() {
+                            _selectedDay = selectedDay;
+                            _focusedDay = focusedDay;
+                            _rangeStart = null; // Important to clean those
+                            _rangeEnd = null;
+                            _rangeSelectionMode = RangeSelectionMode.toggledOff;
+                          });
+                        }
+                      },
+                      onRangeSelected: (start, end, focusedDay) {
+                        setState(() {
+                          _selectedDay = null;
+                          _focusedDay = focusedDay;
+                          _rangeStart = start;
+                          _rangeEnd = end;
+                          _rangeSelectionMode = RangeSelectionMode.toggledOn;
+                        });
+                      },
+                      onFormatChanged: (format) {
+                        if (_calendarFormat != format) {
+                          setState(() {
+                            _calendarFormat = format;
+                          });
+                        }
+                      },
+                      onPageChanged: (focusedDay) {
+                        _focusedDay = focusedDay;
+                      },
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: (_rangeStart == null || _rangeEnd == null)
+                        ? null
+                        : () {
+                            Provider.of<DateProvider>(context, listen: false)
+                                .updateRange(_rangeStart!, _rangeEnd!);
+                            Navigator.pop(context);
+                          },
+                    child: Container(
+                      margin: EdgeInsets.only(
+                          left: 15, right: 15, top: 2, bottom: 10),
+                      width: 100,
+                      padding: EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                          color: (_rangeStart == null || _rangeEnd == null)
+                              ? Colors.grey
+                              : Colors.black,
+                          borderRadius: BorderRadius.circular(8)),
+                      child: Text(
+                        'Save',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.getFont('Poppins',
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class BuildTripDetails extends StatelessWidget {
   final ModelPlace place;
-  const BuildTripDetails({Key? key, required this.place}) : super(key: key);
+  final String startDate;
+  final String endDate;
+  const BuildTripDetails(
+      {Key? key,
+      required this.place,
+      required this.startDate,
+      required this.endDate})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -255,18 +410,56 @@ class BuildTripDetails extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               ListTile(
+                titleAlignment: ListTileTitleAlignment.center,
+                trailing: GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      PageRouteBuilder(
+                        transitionDuration: Duration(milliseconds: 500),
+                        pageBuilder: (_, __, ___) => CalendarPage(),
+                        transitionsBuilder: (_, animation, __, child) {
+                          return SlideTransition(
+                            position: Tween<Offset>(
+                              begin: Offset(0, 1),
+                              end: Offset.zero,
+                            ).animate(animation),
+                            child: child,
+                          );
+                        },
+                      ),
+                    );
+                  },
+                  child: Text(
+                    'Edit',
+                    style: GoogleFonts.poppins(
+                      decoration: TextDecoration.underline,
+                      fontSize: 18,
+                    ),
+                  ),
+                ),
                 contentPadding: EdgeInsets.zero,
                 title: Text(
                   'Dates',
                   style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
                 ),
                 subtitle: Text(
-                  '21-26 Apr',
+                  '${startDate}-${endDate}',
                   style: GoogleFonts.poppins(color: Colors.grey.shade700),
                 ),
               ),
               ListTile(
                 contentPadding: EdgeInsets.zero,
+                trailing: GestureDetector(
+                  onTap: () {},
+                  child: Text(
+                    'Edit',
+                    style: GoogleFonts.poppins(
+                      decoration: TextDecoration.underline,
+                      fontSize: 18,
+                    ),
+                  ),
+                ),
                 title: Text(
                   'Guests',
                   style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
