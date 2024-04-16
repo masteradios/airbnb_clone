@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 
 class GuestCountProvider extends ChangeNotifier {
-  int _adultCount = 0;
+  int _adultCount = 1;
   int _childCount = 0;
   int get adultCount => _adultCount;
   int get childCount => _childCount;
@@ -12,5 +12,5 @@ class GuestCountProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  int get getTotalCount => _adultCount + _childCount;
+  int get getTotalGuestCount => _adultCount + _childCount;
 }

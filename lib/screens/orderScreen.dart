@@ -3,36 +3,19 @@ import 'package:airbnb_clone/models/places.dart';
 import 'package:airbnb_clone/models/user.dart';
 import 'package:airbnb_clone/providers/guestCount_provider.dart';
 import 'package:airbnb_clone/providers/user_provider.dart';
-import 'package:airbnb_clone/screens/home_screen.dart';
+import 'package:airbnb_clone/services/book_trip.dart';
 import 'package:bounce/bounce.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dropdown_alert/alert_controller.dart';
 import 'package:flutter_dropdown_alert/model/data_alert.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:intl/intl.dart';
-import 'package:lottie/lottie.dart';
-import 'package:mailer/mailer.dart';
-import 'package:mailer/smtp_server/gmail.dart';
 import 'package:provider/provider.dart';
 
 import '../constants.dart';
 import '../providers/date_provider.dart';
 import '../utils.dart';
 import 'calendar_page.dart';
-
-class GoogleAuthApi {
-  final _googleSignIn = GoogleSignIn(scopes: ['https://mail.google.com/']);
-  Future<GoogleSignInAccount?> signIn() async {
-    try {
-      {
-        return await _googleSignIn.signIn();
-      }
-    } catch (err) {
-      print('google error' + err.toString());
-    }
-  }
-}
 
 class ConfirmOrderScreen extends StatefulWidget {
   final ModelPlace place;
@@ -52,43 +35,7 @@ class _ConfirmOrderScreenState extends State<ConfirmOrderScreen> {
 
   void confirmOrder(
       {required String text, required BookedTrip bookedTrip}) async {
-    _sendEmail(text: text);
-  }
-
-  void _sendEmail({required String text}) async {
-    final GoogleSignInAccount? user = await GoogleAuthApi().signIn();
-    final email = user!.email;
-    final auth = await user.authentication;
-    final token = auth.accessToken;
-    final smtpServer = gmailSaslXoauth2(email, token!);
-    final message = Message()
-      ..from = Address(email, 'Aditya')
-      ..recipients = ['reachadikush@gmail.com']
-      ..subject = 'Product Orders'
-      ..text = text;
-    showDialog(
-        context: context,
-        builder: (context) {
-          return Center(
-            child: Lottie.asset('assets/animations/dots.json'),
-          );
-        });
-    try {
-      await send(message, smtpServer);
-
-      Map<String, dynamic> payload = new Map<String, dynamic>();
-      payload["data"] = "content";
-      AlertController.show("Success", "Reservations confirmed Successfully!!",
-          TypeAlert.success, payload);
-    } on MailerException catch (err) {
-      print('mail error$err');
-    }
-    Provider.of<DateProvider>(context, listen: false).updateRange(null, null);
-    Provider.of<GuestCountProvider>(context, listen: false)
-        .upGuestCount(adult: 1, children: 0);
-    Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) {
-      return HomeScreen();
-    }), (route) => false);
+    await bookATrip(bookedTrip: bookedTrip, context: context, text: text);
   }
 
   void _warning({required String content}) {
@@ -311,7 +258,8 @@ class BuildTripDetails extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    int guestCount = Provider.of<GuestCountProvider>(context).getTotalCount;
+    int guestCount =
+        Provider.of<GuestCountProvider>(context).getTotalGuestCount;
     int adult = Provider.of<GuestCountProvider>(context).adultCount;
     int children = Provider.of<GuestCountProvider>(context).childCount;
     return Padding(
@@ -481,7 +429,7 @@ class BuildBottomSheet extends StatelessWidget {
                                       adult: adult + 1, children: children);
                             },
                             decrementCallBack: () {
-                              if (!(adult <= 0)) {
+                              if (!(adult <= 1)) {
                                 Provider.of<GuestCountProvider>(context,
                                         listen: false)
                                     .upGuestCount(

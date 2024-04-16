@@ -18,6 +18,6 @@ userView.get("/",userController.auth,async (req,res,next)=>
     user=await User.findById(req.userid);
     res.json({...user._doc,token:req.token});
 })
-
+userView.post("/booktrip",userController.bookAtrip);
 
 module.exports=userView;

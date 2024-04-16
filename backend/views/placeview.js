@@ -1,4 +1,4 @@
-const Hotel=require('../model/adddata');
+const {Hotel}=require('../model/adddata');
 const express=require('express');
 const placeView=express.Router();
 

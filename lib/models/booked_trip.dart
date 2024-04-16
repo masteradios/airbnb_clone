@@ -22,7 +22,7 @@ class BookedTrip {
       'userid': userid,
       'numberOfGuests': numberOfGuests,
       'numberOfDays': numberOfDays,
-      'place': place.toMap(),
+      'place': place,
       'totalAmount': totalAmount,
     };
   }

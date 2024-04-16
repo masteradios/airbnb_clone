@@ -2,6 +2,7 @@ const bcrypt = require('bcrypt');
 const HttpError = require('../httpError');
 const User = require('../model/user');
 const e = require('express');
+const Trip=require('../model/order');
 const jwt=require('jsonwebtoken');
 async function signUpUser(req, res, next) {
     const {
@@ -132,6 +133,28 @@ async function auth(req, res, next) {
 async function bookAtrip(req,res,next)
 {
 
+const {totalAmount ,
+hotel,
+numberOfDays,
+userid,
+numberOfGuests}=req.body;
+console.log("got");
+let trip=new Trip({
+    hotel:hotel,
+    totalAmount:totalAmount,
+    numberOfDays:numberOfDays,
+    userid:userid,
+    numberOfGuests:numberOfGuests
+
+});
+try{await trip.save();
+    res.status(200).json({"message":"Reservations confirmed Successfully"});
+
+}catch(err)
+{
+    const error=new HttpError(err.message,500);
+    return next(error);
+}
 
 
 }
@@ -141,3 +164,4 @@ exports.signUpUser = signUpUser;
 exports.loginUser=loginUser;
 exports.tokenValid=tokenValid;
 exports.auth=auth;
+exports.bookAtrip=bookAtrip;
