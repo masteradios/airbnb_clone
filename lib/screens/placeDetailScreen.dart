@@ -7,6 +7,7 @@ import 'package:bounce/bounce.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:lottie/lottie.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
@@ -107,8 +108,17 @@ class _PlaceDetailsScreenState extends State<PlaceDetailsScreen> {
                           ),
                           BuildAppBarButton(
                               callback: () async {
+                                showDialog(
+                                    context: context,
+                                    builder: (context) {
+                                      return Center(
+                                        child: Lottie.asset(
+                                            'assets/animations/dots.json'),
+                                      );
+                                    });
                                 final image =
                                     await screenshotController.capture();
+                                Navigator.pop(context);
                                 saveAndShare(image);
                               },
                               icon: Icons.share)
@@ -130,7 +140,7 @@ class _PlaceDetailsScreenState extends State<PlaceDetailsScreen> {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10.0),
                   child: Text(
-                    ' ₹${widget.place.price} night',
+                    ' ₹${widget.place.price}/night',
                     style: GoogleFonts.getFont('Poppins',
                         color: Colors.black,
                         fontWeight: FontWeight.bold,

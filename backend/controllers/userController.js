@@ -86,7 +86,58 @@ async function loginUser(req,res,next)
 
 
 }
+async function tokenValid(req, res, next) {
+    try {
+        const token = req.header("auth-token");
+        if (!token) {
+            return res.json(false);
+        }
+        const isVerified = jwt.verify(token, "passwordKey");
+        if (!isVerified) {
+            return res.json(false);
+        }
+        let user;
+        user = await User.findById(isVerified.id);
+        if (!user) {
+            return res.json(false);
+        }
+        res.json(true);
+    } catch (err) {
+        const error = new HttpError(err.message, 500);
+        return next(error);
+    }
+}
+
+async function auth(req, res, next) {
+    try {
+        const token = req.header("auth-token");
+        if (!token) {
+            return new HttpError("No token found. Authentication denied", 401);
+        }
+        const isVerified = jwt.verify(token, "passwordKey");
+        if (!isVerified) {
+            return res.status(401).json({
+                message: "Token verification failed.Authorization denied!!",
+            });
+        }
+        req.userid = isVerified.id;
+        req.token = token;
+        next();
+    } catch (err) {
+        const error = new HttpError(err.message, 500);
+        return next(error);
+    }
+}
+
+async function bookAtrip(req,res,next)
+{
+
+
+
+}
 
 
 exports.signUpUser = signUpUser;
 exports.loginUser=loginUser;
+exports.tokenValid=tokenValid;
+exports.auth=auth;

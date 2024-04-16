@@ -1,24 +1,25 @@
+import 'package:airbnb_clone/models/booked_trip.dart';
 import 'package:airbnb_clone/models/places.dart';
+import 'package:airbnb_clone/models/user.dart';
+import 'package:airbnb_clone/providers/guestCount_provider.dart';
+import 'package:airbnb_clone/providers/user_provider.dart';
 import 'package:airbnb_clone/screens/home_screen.dart';
 import 'package:bounce/bounce.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dropdown_alert/alert_controller.dart';
+import 'package:flutter_dropdown_alert/model/data_alert.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:intl/intl.dart';
+import 'package:lottie/lottie.dart';
 import 'package:mailer/mailer.dart';
 import 'package:mailer/smtp_server/gmail.dart';
 import 'package:provider/provider.dart';
-import 'package:table_calendar/table_calendar.dart';
 
 import '../constants.dart';
 import '../providers/date_provider.dart';
 import '../utils.dart';
-
-CalendarFormat _calendarFormat = CalendarFormat.month;
-RangeSelectionMode _rangeSelectionMode = RangeSelectionMode.toggledOn;
-DateTime _focusedDay = DateTime.now();
-
-DateTime kFirstDay = DateTime.now();
+import 'calendar_page.dart';
 
 class GoogleAuthApi {
   final _googleSignIn = GoogleSignIn(scopes: ['https://mail.google.com/']);
@@ -44,9 +45,16 @@ class ConfirmOrderScreen extends StatefulWidget {
 
 class _ConfirmOrderScreenState extends State<ConfirmOrderScreen> {
   int tax = 1000;
+  final TextEditingController _upiController = TextEditingController();
   //String s = DateFormat('dd MMMM yyyy').format(_rangeStart!);
 
   final _paymentKey = GlobalKey<FormState>();
+
+  void confirmOrder(
+      {required String text, required BookedTrip bookedTrip}) async {
+    _sendEmail(text: text);
+  }
+
   void _sendEmail({required String text}) async {
     final GoogleSignInAccount? user = await GoogleAuthApi().signIn();
     final email = user!.email;
@@ -58,19 +66,37 @@ class _ConfirmOrderScreenState extends State<ConfirmOrderScreen> {
       ..recipients = ['reachadikush@gmail.com']
       ..subject = 'Product Orders'
       ..text = text;
+    showDialog(
+        context: context,
+        builder: (context) {
+          return Center(
+            child: Lottie.asset('assets/animations/dots.json'),
+          );
+        });
     try {
       await send(message, smtpServer);
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Reservations Confirmed!!')));
+
+      Map<String, dynamic> payload = new Map<String, dynamic>();
+      payload["data"] = "content";
+      AlertController.show("Success", "Reservations confirmed Successfully!!",
+          TypeAlert.success, payload);
     } on MailerException catch (err) {
       print('mail error$err');
     }
+    Provider.of<DateProvider>(context, listen: false).updateRange(null, null);
+    Provider.of<GuestCountProvider>(context, listen: false)
+        .upGuestCount(adult: 1, children: 0);
     Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) {
       return HomeScreen();
     }), (route) => false);
   }
 
-  final TextEditingController _upiController = TextEditingController();
+  void _warning({required String content}) {
+    Map<String, dynamic> payload = new Map<String, dynamic>();
+    payload["data"] = "content";
+    AlertController.show("Warning", "$content", TypeAlert.error, payload);
+  }
+
   @override
   void dispose() {
     // TODO: implement dispose
@@ -79,11 +105,22 @@ class _ConfirmOrderScreenState extends State<ConfirmOrderScreen> {
   }
 
   @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    AlertController.onTabListener(
+        (Map<String, dynamic>? payload, TypeAlert type) {
+      print("$payload - $type");
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     DateTime? startDate = Provider.of<DateProvider>(context).rangeStart;
     DateTime? endDate = Provider.of<DateProvider>(context).rangeEnd;
     int numberOfDays = Provider.of<DateProvider>(context).differenceInDays;
     int sum = widget.place.price.toInt() * numberOfDays;
+    ModelUser user = Provider.of<UserProvider>(context).user;
     int totalAmount = sum + tax;
     return Scaffold(
       backgroundColor: Colors.white,
@@ -147,17 +184,27 @@ class _ConfirmOrderScreenState extends State<ConfirmOrderScreen> {
             ),
             Bounce(
               onTap: () {
-                String text = prepareEmailBody(
-                    widget.place.hotelName,
-                    '${DateFormat('dd MMMM yyyy').format(startDate!)}- ${DateFormat('dd MMMM yyyy').format(endDate!)}',
-                    totalAmount,
-                    _upiController.text.trim());
                 if (_paymentKey.currentState!.validate()) {
-                  _sendEmail(text: text);
-                  Provider.of<DateProvider>(context, listen: false)
-                      .updateRange(null, null);
+                  if (numberOfDays != 0) {
+                    String text = prepareEmailBody(
+                        name: widget.place.hotelName,
+                        duration:
+                            '${DateFormat('dd MMMM yyyy').format(startDate!)}- ${DateFormat('dd MMMM yyyy').format(endDate!)}',
+                        totalAmount: totalAmount,
+                        upiId: _upiController.text.trim());
+
+                    BookedTrip bookedTrip = BookedTrip(
+                        tripid: '',
+                        userid: user.id,
+                        numberOfGuests: 1,
+                        numberOfDays: numberOfDays,
+                        place: widget.place,
+                        totalAmount: totalAmount);
+                    confirmOrder(text: text, bookedTrip: bookedTrip);
+                  } else {
+                    _warning(content: "Select proper stay dates");
+                  }
                 }
-                //_sendEmail(text: text);
               },
               child: Container(
                 margin:
@@ -251,137 +298,6 @@ class BuildPlace extends StatelessWidget {
   }
 }
 
-class CalendarPage extends StatefulWidget {
-  const CalendarPage({super.key});
-
-  @override
-  State<CalendarPage> createState() => _CalendarPageState();
-}
-
-class _CalendarPageState extends State<CalendarPage> {
-  DateTime? _rangeStart;
-  DateTime? _rangeEnd;
-  DateTime? _selectedDay;
-
-  @override
-  Widget build(BuildContext context) {
-    DateTime kLastDay =
-        DateTime(kFirstDay.year, kFirstDay.month + 3, kFirstDay.day);
-
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.only(top: 20.0),
-        child: ClipRRect(
-          borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(20), topRight: Radius.circular(20)),
-          child: Scaffold(
-            body: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                children: [
-                  Align(
-                    alignment: Alignment.topLeft,
-                    child: IconButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                        icon: Icon(
-                          Icons.close,
-                          color: Colors.black,
-                        )),
-                  ),
-                  Expanded(
-                    child: TableCalendar(
-                      calendarStyle: CalendarStyle(
-                          rangeHighlightColor: Colors.grey.shade300,
-                          isTodayHighlighted: false,
-                          todayDecoration: BoxDecoration(
-                              color: Colors.black, shape: BoxShape.circle),
-                          rangeEndDecoration: BoxDecoration(
-                              color: Colors.black, shape: BoxShape.circle),
-                          rangeStartDecoration: BoxDecoration(
-                              color: Colors.black, shape: BoxShape.circle),
-                          markerDecoration: BoxDecoration(color: Colors.black)),
-                      headerStyle: HeaderStyle(formatButtonVisible: false),
-                      firstDay: kFirstDay,
-                      lastDay: kLastDay,
-                      focusedDay: _focusedDay,
-                      selectedDayPredicate: (day) =>
-                          isSameDay(_selectedDay, day),
-                      rangeStartDay: _rangeStart,
-                      rangeEndDay: _rangeEnd,
-                      calendarFormat: _calendarFormat,
-                      rangeSelectionMode: _rangeSelectionMode,
-                      onDaySelected: (selectedDay, focusedDay) {
-                        if (!isSameDay(_selectedDay, selectedDay)) {
-                          setState(() {
-                            _selectedDay = selectedDay;
-                            _focusedDay = focusedDay;
-                            _rangeStart = null; // Important to clean those
-                            _rangeEnd = null;
-                            _rangeSelectionMode = RangeSelectionMode.toggledOff;
-                          });
-                        }
-                      },
-                      onRangeSelected: (start, end, focusedDay) {
-                        setState(() {
-                          _selectedDay = null;
-                          _focusedDay = focusedDay;
-                          _rangeStart = start;
-                          _rangeEnd = end;
-                          _rangeSelectionMode = RangeSelectionMode.toggledOn;
-                        });
-                      },
-                      onFormatChanged: (format) {
-                        if (_calendarFormat != format) {
-                          setState(() {
-                            _calendarFormat = format;
-                          });
-                        }
-                      },
-                      onPageChanged: (focusedDay) {
-                        _focusedDay = focusedDay;
-                      },
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: (_rangeStart == null || _rangeEnd == null)
-                        ? null
-                        : () {
-                            Provider.of<DateProvider>(context, listen: false)
-                                .updateRange(_rangeStart!, _rangeEnd!);
-                            Navigator.pop(context);
-                          },
-                    child: Container(
-                      margin: EdgeInsets.only(
-                          left: 15, right: 15, top: 2, bottom: 10),
-                      width: 100,
-                      padding: EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                          color: (_rangeStart == null || _rangeEnd == null)
-                              ? Colors.grey
-                              : Colors.black,
-                          borderRadius: BorderRadius.circular(8)),
-                      child: Text(
-                        'Save',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.getFont('Poppins',
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class BuildTripDetails extends StatelessWidget {
   final ModelPlace place;
   final String startDate;
@@ -395,6 +311,9 @@ class BuildTripDetails extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    int guestCount = Provider.of<GuestCountProvider>(context).getTotalCount;
+    int adult = Provider.of<GuestCountProvider>(context).adultCount;
+    int children = Provider.of<GuestCountProvider>(context).childCount;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10.0),
       child: Column(
@@ -451,7 +370,14 @@ class BuildTripDetails extends StatelessWidget {
               ListTile(
                 contentPadding: EdgeInsets.zero,
                 trailing: GestureDetector(
-                  onTap: () {},
+                  onTap: () {
+                    showModalBottomSheet(
+                        isScrollControlled: true,
+                        context: context,
+                        builder: (BuildContext bc) {
+                          return BuildBottomSheet();
+                        });
+                  },
                   child: Text(
                     'Edit',
                     style: GoogleFonts.poppins(
@@ -465,13 +391,219 @@ class BuildTripDetails extends StatelessWidget {
                   style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
                 ),
                 subtitle: Text(
-                  '1 guest',
+                  '${guestCount.toString()} ($adult Adults and $children children)',
                   style: GoogleFonts.poppins(color: Colors.grey.shade700),
                 ),
               ),
             ],
           )
         ],
+      ),
+    );
+  }
+}
+
+class BuildBottomSheet extends StatelessWidget {
+  const BuildBottomSheet({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    int adult = Provider.of<GuestCountProvider>(context).adultCount;
+    int children = Provider.of<GuestCountProvider>(context).childCount;
+    return Wrap(children: [
+      Container(
+        width: MediaQuery.of(context).size.width,
+        height: MediaQuery.of(context).size.height / 1.5,
+        child: Container(
+          decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(
+                  topLeft: const Radius.circular(15.0),
+                  topRight: const Radius.circular(15.0))),
+          child: Column(
+            children: [
+              Expanded(
+                child: Column(
+                  children: [
+                    Padding(
+                      padding:
+                          EdgeInsets.symmetric(vertical: 20, horizontal: 15),
+                      child: Row(
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              Provider.of<GuestCountProvider>(context,
+                                      listen: false)
+                                  .upGuestCount(adult: 1, children: 0);
+                              Navigator.pop(context);
+                            },
+                            child: Icon(
+                              Icons.close,
+                              color: Colors.black,
+                            ),
+                          ),
+                          const SizedBox(
+                            width: 15,
+                          ),
+                          Text(
+                            'Guests',
+                            style: GoogleFonts.poppins(
+                                fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Divider(
+                      color: Colors.grey,
+                      thickness: 2,
+                    ),
+                    Padding(
+                      padding: EdgeInsets.all(15),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'This place has a maximum limit of 4 guests, not including infants.',
+                            style: GoogleFonts.poppins(
+                              color: Colors.black87,
+                            ),
+                          ),
+                          BuildGuestCountTile(
+                            title: 'Adults',
+                            condition: 'Age 13+',
+                            count: adult.toString(),
+                            incrementCallBack: () {
+                              Provider.of<GuestCountProvider>(context,
+                                      listen: false)
+                                  .upGuestCount(
+                                      adult: adult + 1, children: children);
+                            },
+                            decrementCallBack: () {
+                              if (!(adult <= 0)) {
+                                Provider.of<GuestCountProvider>(context,
+                                        listen: false)
+                                    .upGuestCount(
+                                        adult: adult - 1, children: children);
+                              }
+                            },
+                          ),
+                          BuildGuestCountTile(
+                            title: 'Children',
+                            condition: 'Age 2-12',
+                            count: children.toString(),
+                            incrementCallBack: () {
+                              Provider.of<GuestCountProvider>(context,
+                                      listen: false)
+                                  .upGuestCount(
+                                      adult: adult, children: children + 1);
+                            },
+                            decrementCallBack: () {
+                              if (!(children <= 0)) {
+                                Provider.of<GuestCountProvider>(context,
+                                        listen: false)
+                                    .upGuestCount(
+                                        adult: adult, children: children - 1);
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                    )
+                  ],
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Container(
+                  margin:
+                      EdgeInsets.only(left: 15, right: 15, top: 2, bottom: 10),
+                  width: 100,
+                  padding: EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                      color: Colors.black,
+                      borderRadius: BorderRadius.circular(8)),
+                  child: Text(
+                    'Save',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.getFont('Poppins',
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      )
+    ]);
+  }
+}
+
+class BuildGuestCountTile extends StatelessWidget {
+  final String title;
+  final String condition;
+  final String count;
+  final VoidCallBack decrementCallBack;
+  final VoidCallBack incrementCallBack;
+  const BuildGuestCountTile(
+      {super.key,
+      required this.incrementCallBack,
+      required this.decrementCallBack,
+      required this.title,
+      required this.count,
+      required this.condition});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      trailing: Container(
+        width: 126,
+        child: Row(
+          children: [
+            IconButton(
+                onPressed: () {
+                  decrementCallBack();
+                },
+                icon: CircleAvatar(
+                    radius: 16,
+                    backgroundColor: Colors.black12,
+                    child: Icon(
+                      Icons.remove,
+                      size: 18,
+                    ))),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4.0),
+              child: Text(
+                count,
+                style: GoogleFonts.poppins(fontSize: 17),
+              ),
+            ),
+            IconButton(
+                onPressed: () {
+                  incrementCallBack();
+                },
+                icon: CircleAvatar(
+                    radius: 16,
+                    backgroundColor: Colors.black12,
+                    child: Icon(
+                      Icons.add,
+                      size: 18,
+                    ))),
+          ],
+        ),
+      ),
+      titleAlignment: ListTileTitleAlignment.center,
+      subtitle: Text(condition,
+          style: GoogleFonts.poppins(color: Colors.black87, fontSize: 12)),
+      contentPadding: EdgeInsets.zero,
+      title: Text(
+        title,
+        style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 18),
       ),
     );
   }

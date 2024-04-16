@@ -71,7 +71,10 @@ Future<Position> determinePosition() async {
 }
 
 String prepareEmailBody(
-    String name, String duration, num totalAmount, String upiId) {
+    {required String name,
+    required String duration,
+    required num totalAmount,
+    required String upiId}) {
   String emailBody = '''
   Hello,
 
