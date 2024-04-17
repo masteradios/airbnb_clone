@@ -1,4 +1,6 @@
 const mongoose = require("mongoose");
+const { wishListItemSchema } = require("./wishlist_item");
+const { hotelSchema } = require("./adddata");
 mongoose.connect(process.env.MONGO_URL).then(function () {
     console.log("mongoose connection established");
 }).catch(function (err) {
@@ -21,7 +23,12 @@ const userSchema = mongoose.Schema({
     address: {
         type: String,
         
+    },
+    wishList:[
+       {hotel: hotelSchema,
+        isFav:{type:Boolean}
     }
+    ]
 
 
 });

@@ -40,8 +40,8 @@ class ModelPlace {
         hotelName: map['hotelName'] ?? '',
         price: map['price'] ?? 0,
         numberOfReviews: map['number_of_reviews'] ?? 0,
-        lat: map['lat'] ?? '',
-        long: map['long'] ?? '',
+        lat: map['lat'] ?? '0',
+        long: map['long'] ?? '0',
         imageUrl: map['image_url'] ?? '',
         description: '''
 Welcome to ${map['hotelName']}, your home away from home! Nestled in the heart of Jaipur, our hotel offers a perfect blend of comfort, convenience, and style for your stay.

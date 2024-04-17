@@ -1,10 +1,15 @@
 import 'dart:async';
 
+import 'package:airbnb_clone/models/user.dart';
+import 'package:airbnb_clone/providers/user_provider.dart';
+import 'package:airbnb_clone/screens/user_trips_screen.dart';
+import 'package:airbnb_clone/screens/wishlists_screen.dart';
 import 'package:airbnb_clone/utils.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:lottie/lottie.dart';
+import 'package:provider/provider.dart';
 
 import '../models/places.dart';
 import '../services/place_services/getTenPlaces.dart';
@@ -64,6 +69,7 @@ class _HomeScreenState extends State<HomeScreen> {
   int currentIndex = 0;
   @override
   Widget build(BuildContext context) {
+    ModelUser user = Provider.of<UserProvider>(context).user;
     List pages = [
       (_isLoading)
           ? Center(
@@ -81,12 +87,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   modelPlaces: modelPlaces,
                   position: position!,
                 ),
-      Center(
-        child: Text('Wishlists'),
-      ),
-      Center(
-        child: Text('Trips'),
-      ),
+      WishListsScreen(user: user),
+      MyTrips(user: user),
       ChatScreen(),
       Center(
         child: Text('Home'),
@@ -94,6 +96,7 @@ class _HomeScreenState extends State<HomeScreen> {
     ];
     return Scaffold(
       appBar: buildAppBar(),
+      backgroundColor: Colors.white,
       bottomNavigationBar: CupertinoTabBar(
         items: [
           BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Explore'),

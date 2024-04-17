@@ -17,30 +17,62 @@ import '../providers/date_provider.dart';
 import '../providers/guestCount_provider.dart';
 import '../screens/home_screen.dart';
 
-Future<void> bookATrip(
-    {required BookedTrip bookedTrip,
-    required BuildContext context,
-    required String text}) async {
-  try {
-    http.Response res = await http.post(Uri.parse('$url/users/booktrip'),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode({
-          "hotel": bookedTrip.place.toMap(),
-          "totalAmount": bookedTrip.totalAmount,
-          "numberOfDays": bookedTrip.numberOfDays,
-          "userid": bookedTrip.userid,
-          "numberOfGuests": bookedTrip.numberOfGuests
-        }));
-    httpErrorHandle(
-        res: res,
-        context: context,
-        onSuccess: () {
-          sendEmail(text: text, context: context);
-        });
-  } catch (err) {
-    print(err.toString());
+class TripService {
+  Future<void> bookATrip(
+      {required BookedTrip bookedTrip,
+      required BuildContext context,
+      required String text}) async {
+    try {
+      http.Response res = await http.post(Uri.parse('$url/users/booktrip'),
+          headers: <String, String>{
+            'Content-Type': 'application/json; charset=UTF-8',
+          },
+          body: jsonEncode({
+            "hotel": bookedTrip.place.toMap(),
+            "totalAmount": bookedTrip.totalAmount,
+            "numberOfDays": bookedTrip.numberOfDays,
+            "userid": bookedTrip.userid,
+            "numberOfGuests": bookedTrip.numberOfGuests,
+            "startDate": bookedTrip.startDate,
+            "endDate": bookedTrip.endDate
+          }));
+      httpErrorHandle(
+          res: res,
+          context: context,
+          onSuccess: () {
+            sendEmail(text: text, context: context);
+          });
+    } catch (err) {
+      print(err.toString());
+    }
+  }
+
+  Future<List<BookedTrip>> getUserTrips(
+      {required String userid, required BuildContext context}) async {
+    List<BookedTrip> bookedTrips = [];
+    try {
+      http.Response res = await http.post(Uri.parse('$url/users/getusertrips'),
+          headers: <String, String>{
+            'Content-Type': 'application/json; charset=UTF-8',
+          },
+          body: jsonEncode({"userid": userid}));
+      httpErrorHandle(
+          res: res,
+          context: context,
+          onSuccess: () {
+            for (int i = 0;
+                i < jsonDecode(res.body)['bookedTrips'].length;
+                i++) {
+              BookedTrip trip =
+                  BookedTrip.fromMap(jsonDecode(res.body)['bookedTrips'][i]);
+              bookedTrips.add(trip);
+            }
+            print(bookedTrips);
+          });
+    } catch (err) {
+      print(err.toString());
+    }
+    return bookedTrips;
   }
 }
 

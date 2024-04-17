@@ -35,7 +35,8 @@ class _ConfirmOrderScreenState extends State<ConfirmOrderScreen> {
 
   void confirmOrder(
       {required String text, required BookedTrip bookedTrip}) async {
-    await bookATrip(bookedTrip: bookedTrip, context: context, text: text);
+    await TripService()
+        .bookATrip(bookedTrip: bookedTrip, context: context, text: text);
   }
 
   void _warning({required String content}) {
@@ -146,7 +147,9 @@ class _ConfirmOrderScreenState extends State<ConfirmOrderScreen> {
                         numberOfGuests: 1,
                         numberOfDays: numberOfDays,
                         place: widget.place,
-                        totalAmount: totalAmount);
+                        totalAmount: totalAmount,
+                        startDate: DateFormat('dd MMMM yyyy').format(startDate),
+                        endDate: DateFormat('dd MMMM yyyy').format(endDate));
                     confirmOrder(text: text, bookedTrip: bookedTrip);
                   } else {
                     _warning(content: "Select proper stay dates");

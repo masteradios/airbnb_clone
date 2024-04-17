@@ -25,7 +25,8 @@ class AuthService {
         username: username,
         email: email,
         password: password,
-        address: '');
+        address: '',
+        wishList: []);
     try {
       http.Response res = await http.post(Uri.parse('$url/users/signup'),
           headers: <String, String>{

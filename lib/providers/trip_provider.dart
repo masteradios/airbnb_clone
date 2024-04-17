@@ -19,7 +19,9 @@ class BookedTripProvider extends ChangeNotifier {
             long: 0,
             imageUrl: '',
             description: ''),
-        totalAmount: 0)
+        totalAmount: 0,
+        startDate: '',
+        endDate: '')
   ];
   List<BookedTrip> get tripList => _tripList;
 

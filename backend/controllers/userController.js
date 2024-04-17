@@ -4,6 +4,7 @@ const User = require('../model/user');
 const e = require('express');
 const Trip=require('../model/order');
 const jwt=require('jsonwebtoken');
+const { hotelSchema } = require('../model/adddata');
 async function signUpUser(req, res, next) {
     const {
         username,
@@ -136,11 +137,14 @@ async function bookAtrip(req,res,next)
 const {totalAmount ,
 hotel,
 numberOfDays,
+startDate,endDate,
 userid,
 numberOfGuests}=req.body;
 console.log("got");
 let trip=new Trip({
     hotel:hotel,
+    startDate:startDate,
+    endDate:endDate,
     totalAmount:totalAmount,
     numberOfDays:numberOfDays,
     userid:userid,
@@ -160,8 +164,60 @@ try{await trip.save();
 }
 
 
+async function getUserTrips(req,res,next)
+{
+    const {userid}=req.body;
+    
+    try{
+        let trips=await Trip.find({userid:userid});
+    
+        res.status(200).json({"bookedTrips":trips});
+
+    }catch(err)
+    {
+        const error=new HttpError(err,message,500);
+        return next(error);
+    }
+    
+    
+
+}
+
+async function addToWishList(req,res,next){
+const {hotel,userid}=req.body;
+try{
+    let user=await User.findById(userid);
+    console.log("got");
+    //let token = req.token;
+    if(user)
+    {
+        user.wishList.push({
+
+            hotel:hotel,
+            isFav:false
+        });
+
+    }
+    await user.save();
+    console.log("sent");
+
+    res.status(200).json({...user._doc});
+    
+
+
+
+}catch(err)
+{
+    const error=new HttpError(err.message,500);
+    return next(error);
+}
+}
+
+
 exports.signUpUser = signUpUser;
 exports.loginUser=loginUser;
 exports.tokenValid=tokenValid;
 exports.auth=auth;
 exports.bookAtrip=bookAtrip;
+exports.getUserTrips=getUserTrips;
+exports.addToWishList=addToWishList;

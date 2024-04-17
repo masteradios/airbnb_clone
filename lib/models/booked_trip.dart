@@ -5,6 +5,8 @@ class BookedTrip {
   final String userid;
   final int numberOfGuests;
   final int numberOfDays;
+  final String startDate;
+  final String endDate;
   final ModelPlace place;
   final int totalAmount;
 
@@ -14,6 +16,8 @@ class BookedTrip {
       required this.numberOfGuests,
       required this.numberOfDays,
       required this.place,
+      required this.startDate,
+      required this.endDate,
       required this.totalAmount});
 
   Map<String, dynamic> toMap() {
@@ -24,6 +28,8 @@ class BookedTrip {
       'numberOfDays': numberOfDays,
       'place': place,
       'totalAmount': totalAmount,
+      'startDate': startDate,
+      'endDate': endDate,
     };
   }
 
@@ -31,11 +37,11 @@ class BookedTrip {
     return BookedTrip(
         tripid: map['_id'] ?? '',
         userid: map['userid'] ?? '',
+        startDate: map['startDate'] ?? '',
+        endDate: map['endDate'] ?? '',
         numberOfGuests: map['numberOfGuests'] ?? '',
         numberOfDays: map['numberOfDays'] ?? '',
-        place: map['place']?.map(
-          (x) => ModelPlace.fromMap(x['place']),
-        ),
+        place: ModelPlace.fromMap(map['hotel']),
         totalAmount: map['totalAmount'] ?? '');
   }
 

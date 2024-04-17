@@ -1,6 +1,7 @@
 import 'package:airbnb_clone/models/places.dart';
 import 'package:airbnb_clone/screens/placeDetailScreen.dart';
 import 'package:airbnb_clone/screens/searchScreen.dart';
+import 'package:airbnb_clone/services/wishlist_services.dart';
 import 'package:airbnb_clone/widgets/buildShimmer.dart';
 import 'package:bounce/bounce.dart';
 import 'package:flutter/material.dart';
@@ -33,30 +34,79 @@ class _ExploreScreenState extends State<ExploreScreen> {
         buildRecommenededPlaces(
           modelPlaces: widget.modelPlaces,
           position: widget.position,
+          user: user,
         )
       ],
     );
   }
 }
 
-class buildRecommenededPlaces extends StatelessWidget {
+class buildRecommenededPlaces extends StatefulWidget {
   final Position position;
+  final ModelUser user;
   const buildRecommenededPlaces(
-      {super.key, required this.modelPlaces, required this.position});
+      {super.key,
+      required this.modelPlaces,
+      required this.position,
+      required this.user});
 
   final List<ModelPlace> modelPlaces;
 
   @override
+  State<buildRecommenededPlaces> createState() =>
+      _buildRecommenededPlacesState();
+}
+
+class _buildRecommenededPlacesState extends State<buildRecommenededPlaces> {
+  List<bool> isFav = [
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false
+  ];
+
+  void addToWishlists(
+      {required ModelPlace place, required String userid}) async {
+    await WishListServices()
+        .addToWishlists(context: context, place: place, userid: userid);
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    //initiate();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    ModelUser user = Provider.of<UserProvider>(context).user;
     return Expanded(
       child: ListView.builder(
         itemBuilder: (context, index) {
           return buildPlaceTile(
-            place: modelPlaces[index],
-            position: position,
+            place: widget.modelPlaces[index],
+            position: widget.position,
+            isFav: false,
+            callBack: () {
+              // for (int i = 0; i < widget.modelPlaces.length; i++) {
+              //   if (widget.modelPlaces[index].id == user.wishList[i].id) {
+              //     setState(() {
+              //       isFav[index] = true;
+              //     });
+              //   }
+              // }
+              addToWishlists(place: widget.modelPlaces[index], userid: user.id);
+            },
           );
         },
-        itemCount: modelPlaces.length,
+        itemCount: widget.modelPlaces.length,
       ),
     );
   }
@@ -65,7 +115,14 @@ class buildRecommenededPlaces extends StatelessWidget {
 class buildPlaceTile extends StatelessWidget {
   final ModelPlace place;
   final Position position;
-  buildPlaceTile({super.key, required this.place, required this.position});
+  final VoidCallback callBack;
+  final bool isFav;
+  buildPlaceTile(
+      {super.key,
+      required this.isFav,
+      required this.place,
+      required this.position,
+      required this.callBack});
   String calculateTotalDistance({required LatLng pointB}) {
     LatLng pointA = LatLng(position.latitude, position.longitude);
     double distance = calculateDistance(pointA, pointB);
@@ -111,12 +168,20 @@ class buildPlaceTile extends StatelessWidget {
                         right: 10,
                         child: Bounce(
                           scaleFactor: 1.6,
-                          onTap: () {},
-                          child: Icon(
-                            Icons.favorite_border,
-                            size: 30,
-                            color: Colors.black,
-                          ),
+                          onTap: () {
+                            callBack();
+                          },
+                          child: (isFav)
+                              ? Icon(
+                                  Icons.favorite,
+                                  size: 30,
+                                  color: Colors.redAccent,
+                                )
+                              : Icon(
+                                  Icons.favorite_border,
+                                  size: 30,
+                                  color: Colors.black,
+                                ),
                         ),
                       ),
                     ],

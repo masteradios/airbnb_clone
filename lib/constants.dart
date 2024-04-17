@@ -1,4 +1,6 @@
-const url = 'http://192.168.0.105:3000';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+String url=dotenv.env['URL']!;
+
 const logo = 'assets/logo.jpg';
 
 const List<String> worldMapsImages = [
